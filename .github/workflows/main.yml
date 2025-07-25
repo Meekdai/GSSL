@@ -38,8 +38,5 @@ jobs:
             echo "准备发送钉钉通知，消息内容："
             echo "$MESSAGE"
 
-            curl -v --fail \
-              -H "Content-Type: application/json" \
-              -d "{\"msgtype\": \"text\", \"text\": {\"content\": \"$ESCAPED_MESSAGE\"}}" \
-              "$DINGTALK_WEBHOOK" || true
+            curl '$DINGTALK_WEBHOOK' -H "Content-Type: application/json" -d '{"msgtype": "text", "text": {"content": "meekdai.com 证书过期"}}'
           fi
