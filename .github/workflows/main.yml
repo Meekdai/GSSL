@@ -26,7 +26,7 @@ jobs:
           echo "📅 证书过期日期: $EXPIRY_DATE"
           echo "⏳ 证书还有 $REMAINING_DAYS 天到期"
 
-          if [ "$REMAINING_DAYS" -lt 30 ]; then
+          if [ "$REMAINING_DAYS" -lt 90 ]; then
             echo "❌ 证书将在 $REMAINING_DAYS 天内过期，触发失败以发送邮件提醒。"
             exit 1
           else
