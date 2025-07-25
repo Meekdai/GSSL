@@ -23,7 +23,7 @@ jobs:
           REMAINING_DAYS=$(( (EXPIRY_SECONDS - NOW_SECONDS) / 86400 ))
 
           echo "days=$REMAINING_DAYS" >> $GITHUB_OUTPUT
-          if [ "$REMAINING_DAYS" -lt 30 ]; then
+          if [ "$REMAINING_DAYS" -lt 90 ]; then
             echo "expire=true" >> $GITHUB_OUTPUT
           else
             echo "expire=false" >> $GITHUB_OUTPUT
