@@ -1,17 +1,37 @@
-name: SSL/TLS Monitor
+name: Check SSL Certificate Expiry
+
 on:
-  workflow_dispatch:
   schedule:
     - cron: "0 16 * * *"
+  workflow_dispatch: # 允许手动触发
 
 jobs:
-  monitor:
-    name: SSL/TLS Monitor
+  check-ssl-cert:
     runs-on: ubuntu-latest
     steps:
-      - name: Monitor
-        uses: zrosenbauer/action-tls-monitor@main
-        with:
-          domain: meekdai.com
-          expiration_days: 5
-          approved_protocols: TLSv1.2,TLSv1.3
+      - name: Check SSL Certificate Expiry
+        run: |
+          DOMAIN="meekdai.com"
+
+          echo "正在检查 $DOMAIN 的 SSL 证书过期时间..."
+
+          # 获取证书过期时间
+          EXPIRY_DATE=$(echo | openssl s_client -servername $DOMAIN -connect $DOMAIN:443 2>/dev/null \
+            | openssl x509 -noout -enddate | cut -d= -f2)
+
+          # 转换为时间戳
+          EXPIRY_SECONDS=$(date -d "$EXPIRY_DATE" +%s)
+          NOW_SECONDS=$(date +%s)
+
+          # 计算剩余天数
+          REMAINING_DAYS=$(( (EXPIRY_SECONDS - NOW_SECONDS) / 86400 ))
+
+          echo "🔒 域名: $DOMAIN"
+          echo "📅 证书过期日期: $EXPIRY_DATE"
+          echo "⏳ 证书还有 $REMAINING_DAYS 天到期"
+
+          # 如果小于30天，报错并退出
+          if [ "$REMAINING_DAYS" -lt 30 ]; then
+            echo "⚠️ WARNING: 证书将在 $REMAINING_DAYS 天内过期！"
+            exit 1
+          fi
