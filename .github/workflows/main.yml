@@ -40,7 +40,6 @@ jobs:
 
             curl -v --fail \
               -H "Content-Type: application/json" \
-              -X POST \
               -d "{\"msgtype\": \"text\", \"text\": {\"content\": \"$ESCAPED_MESSAGE\"}}" \
               "$DINGTALK_WEBHOOK" || true
           fi
