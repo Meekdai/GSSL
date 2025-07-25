@@ -1,2 +1,1 @@
-# ssl-monitor
-通过GitHub action来监控网站的证书是否过期
+⚠️ meekdai.com 证书将在 88 天内过期！
