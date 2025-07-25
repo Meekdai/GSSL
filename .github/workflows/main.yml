@@ -1,0 +1,16 @@
+name: SSL/TLS Monitor
+on:
+  schedule:
+    - cron: "0 16 * * *"
+
+jobs:
+  monitor:
+    name: SSL/TLS Monitor
+    runs-on: ubuntu-latest
+    steps:
+      - name: Monitor
+        uses: zrosenbauer/action-tls-monitor@main
+        with:
+          domain: meekdai.com
+          expiration_days: 5
+          approved_protocols: TLSv1.2,TLSv1.3
