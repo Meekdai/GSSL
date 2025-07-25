@@ -8,27 +8,27 @@ on:
 jobs:
   check-ssl-cert:
     runs-on: ubuntu-latest
+    outputs:
+      expire: ${{ steps.check.outputs.expire }}
+      days: ${{ steps.check.outputs.days }}
     steps:
-      - name: Check SSL Certificate Expiry
+      - name: Check SSL for meekdai.com
+        id: check
         run: |
           DOMAIN="meekdai.com"
-
-          echo "正在检查 $DOMAIN 的 SSL 证书过期时间..."
-
           EXPIRY_DATE=$(echo | openssl s_client -servername $DOMAIN -connect $DOMAIN:443 2>/dev/null \
-            | openssl x509 -noout -enddate | cut -d= -f2)
-
+              | openssl x509 -noout -enddate | cut -d= -f2)
           EXPIRY_SECONDS=$(date -d "$EXPIRY_DATE" +%s)
           NOW_SECONDS=$(date +%s)
           REMAINING_DAYS=$(( (EXPIRY_SECONDS - NOW_SECONDS) / 86400 ))
 
-          echo "🔒 域名: $DOMAIN"
-          echo "📅 证书过期日期: $EXPIRY_DATE"
-          echo "⏳ 证书还有 $REMAINING_DAYS 天到期"
-
-          if [ "$REMAINING_DAYS" -lt 90 ]; then
-            echo "::error title=证书即将过期::meekdai.com 剩余 ${REMAINING_DAYS} 天，截止 ${EXPIRY_DATE}"
-            exit 1
+          echo "days=$REMAINING_DAYS" >> $GITHUB_OUTPUT
+          if [ "$REMAINING_DAYS" -lt 30 ]; then
+            echo "expire=true" >> $GITHUB_OUTPUT
           else
-            echo "✅ 证书有效，无需提醒。"
+            echo "expire=false" >> $GITHUB_OUTPUT
           fi
+
+      - name: ❌ meekdai.com 证书将在 ${{ steps.check.outputs.days }} 天内过期
+        if: ${{ steps.check.outputs.expire == 'true' }}
+        run: exit 1
