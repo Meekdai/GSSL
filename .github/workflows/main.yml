@@ -23,7 +23,7 @@ jobs:
           NOW_TS=$(date +%s)
           REMAINING_DAYS=$(( (EXPIRY_TS - NOW_TS) / 86400 ))
 
-          if [ "$REMAINING_DAYS" -lt 90 ]; then
+          if [ "$REMAINING_DAYS" -lt 7 ]; then
             STATUS="⚠️ meekdai.com 证书将在 $REMAINING_DAYS 天内过期！"
             echo "exit_needed=true" >> $GITHUB_OUTPUT
           else
