@@ -31,15 +31,18 @@ jobs:
           echo "⏳ 证书还有 $REMAINING_DAYS 天到期"
 
           # 如果小于30天，报错并退出
-          if [ "$REMAINING_DAYS" -lt 90 ]; then
+          if [ "$REMAINING_DAYS" -lt 30 ]; then
             echo "⚠️ 证书即将过期，准备发送钉钉通知..."
 
-            MESSAGE="【SSL预警】\n域名: $DOMAIN\n证书到期时间: $EXPIRY_DATE\n剩余: $REMAINING_DAYS 天\n请及时续期。#SSL"
+            # 使用 printf 构造消息内容，避免换行符破坏json
+            MESSAGE=$(printf "【SSL预警】\n域名: %s\n证书到期时间: %s\n剩余: %d 天\n请及时续期。#SSL" "$DOMAIN" "$EXPIRY_DATE" "$REMAINING_DAYS")
 
-            # 使用 curl 发送钉钉机器人消息
+            # 转义双引号和反斜杠，防止 JSON 解析失败
+            ESCAPED_MESSAGE=$(echo "$MESSAGE" | sed 's/\\/\\\\/g; s/"/\\"/g')
+
             curl -s \
               -H "Content-Type: application/json" \
               -X POST \
-              -d "{\"msgtype\": \"text\", \"text\": {\"content\": \"$MESSAGE\"}}" \
+              -d "{\"msgtype\": \"text\", \"text\": {\"content\": \"$ESCAPED_MESSAGE\"}}" \
               "$DINGTALK_WEBHOOK"
           fi
