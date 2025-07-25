@@ -8,42 +8,27 @@ on:
 jobs:
   check-ssl-cert:
     runs-on: ubuntu-latest
-    env:
-      DINGTALK_WEBHOOK: ${{ secrets.DINGTALK_WEBHOOK }}
     steps:
-      - name: Debug Webhook Secret
-        run: |
-          echo "Webhook 长度: ${#DINGTALK_WEBHOOK}"
-          echo "Webhook 前15字符: ${DINGTALK_WEBHOOK:0:15}"
-          
       - name: Check SSL Certificate Expiry
         run: |
           DOMAIN="meekdai.com"
 
           echo "正在检查 $DOMAIN 的 SSL 证书过期时间..."
 
-          # 获取证书过期时间
           EXPIRY_DATE=$(echo | openssl s_client -servername $DOMAIN -connect $DOMAIN:443 2>/dev/null \
             | openssl x509 -noout -enddate | cut -d= -f2)
 
-          # 转换为时间戳
           EXPIRY_SECONDS=$(date -d "$EXPIRY_DATE" +%s)
           NOW_SECONDS=$(date +%s)
-
-          # 计算剩余天数
           REMAINING_DAYS=$(( (EXPIRY_SECONDS - NOW_SECONDS) / 86400 ))
 
           echo "🔒 域名: $DOMAIN"
           echo "📅 证书过期日期: $EXPIRY_DATE"
           echo "⏳ 证书还有 $REMAINING_DAYS 天到期"
 
-          # 如果小于30天，报错并退出
-          if [ "$REMAINING_DAYS" -lt 90 ]; then
-            MESSAGE=$(printf "【SSL预警】\n域名: %s\n证书到期时间: %s\n剩余: %d 天\n请及时续期。#SSL" "$DOMAIN" "$EXPIRY_DATE" "$REMAINING_DAYS")
-            ESCAPED_MESSAGE=$(echo "$MESSAGE" | sed 's/\\/\\\\/g; s/"/\\"/g')
-
-            echo "准备发送钉钉通知，消息内容："
-            echo "$MESSAGE"
-
-            curl -v --fail '$DINGTALK_WEBHOOK' -H "Content-Type: application/json" -d '{"msgtype": "text", "text": {"content": "meekdai.com 证书过期"}}'
+          if [ "$REMAINING_DAYS" -lt 30 ]; then
+            echo "❌ 证书将在 $REMAINING_DAYS 天内过期，触发失败以发送邮件提醒。"
+            exit 1
+          else
+            echo "✅ 证书有效，无需提醒。"
           fi
