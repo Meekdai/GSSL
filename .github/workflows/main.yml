@@ -31,7 +31,7 @@ jobs:
           echo "⏳ 证书还有 $REMAINING_DAYS 天到期"
 
           # 如果小于30天，报错并退出
-          if [ "$REMAINING_DAYS" -lt 30 ]; then
+          if [ "$REMAINING_DAYS" -lt 90 ]; then
             echo "⚠️ 证书即将过期，准备发送钉钉通知..."
 
             # 使用 printf 构造消息内容，避免换行符破坏json
