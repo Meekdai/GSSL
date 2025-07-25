@@ -31,7 +31,15 @@ jobs:
           echo "⏳ 证书还有 $REMAINING_DAYS 天到期"
 
           # 如果小于30天，报错并退出
-          if [ "$REMAINING_DAYS" -lt 30 ]; then
-            echo "⚠️ WARNING: 证书将在 $REMAINING_DAYS 天内过期！"
-            exit 1
+          if [ "$REMAINING_DAYS" -lt 90 ]; then
+            echo "⚠️ 证书即将过期，准备发送钉钉通知..."
+
+            MESSAGE="【SSL预警】\n域名: $DOMAIN\n证书到期时间: $EXPIRY_DATE\n剩余: $REMAINING_DAYS 天\n请及时续期。#SSL"
+
+            # 使用 curl 发送钉钉机器人消息
+            curl -s \
+              -H "Content-Type: application/json" \
+              -X POST \
+              -d "{\"msgtype\": \"text\", \"text\": {\"content\": \"$MESSAGE\"}}" \
+              "$DINGTALK_WEBHOOK"
           fi
