@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Check SSL expiry
@@ -18,60 +18,40 @@ jobs:
         run: |
           DOMAIN="meekdai.com"
           EXPIRY_DATE=$(echo | openssl s_client -servername $DOMAIN -connect $DOMAIN:443 2>/dev/null \
-              | openssl x509 -noout -enddate | cut -d= -f2)
-
-          echo "🔒 域名: $DOMAIN"
-          echo "📅 证书过期日期: $EXPIRY_DATE"
-
+            | openssl x509 -noout -enddate | cut -d= -f2)
           EXPIRY_TS=$(date -d "$EXPIRY_DATE" +%s)
           NOW_TS=$(date +%s)
           REMAINING_DAYS=$(( (EXPIRY_TS - NOW_TS) / 86400 ))
 
-          echo "⏳ 证书还有 $REMAINING_DAYS 天到期"
-
           if [ "$REMAINING_DAYS" -lt 90 ]; then
-            echo "❌ 证书即将过期（$REMAINING_DAYS 天），触发失败以发送邮件提醒"
-            echo "status=⚠️ 即将过期" >> $GITHUB_OUTPUT
+            STATUS="⚠️ meekdai.com 证书将在 $REMAINING_DAYS 天内过期！"
             echo "exit_needed=true" >> $GITHUB_OUTPUT
           else
-            echo "✅ 证书状态正常（$REMAINING_DAYS 天）"
-            echo "status=✅ 正常" >> $GITHUB_OUTPUT
+            STATUS="✅ meekdai.com 证书正常，剩余 $REMAINING_DAYS 天"
             echo "exit_needed=false" >> $GITHUB_OUTPUT
           fi
 
-          echo "expiry_date=$EXPIRY_DATE" >> $GITHUB_OUTPUT
-          echo "remaining_days=$REMAINING_DAYS" >> $GITHUB_OUTPUT
+          echo "status=$STATUS" >> $GITHUB_OUTPUT
 
-      - name: Update README.md with SSL info
+      - name: Overwrite README.md with status
         run: |
-          # 生成表格内容
-          cat <<EOF > ssl_status.md
-| 域名        | 证书过期时间             | 剩余天数 | 状态         |
-|-------------|--------------------------|----------|--------------|
-| meekdai.com | ${{ steps.ssl.outputs.expiry_date }} | ${{ steps.ssl.outputs.remaining_days }} 天 | ${{ steps.ssl.outputs.status }} |
-EOF
+          echo "${{ steps.ssl.outputs.status }}" > README.md
 
-          # 更新 README 中占位符之间的内容
-          START="<!--SSL_STATUS_START-->"
-          END="<!--SSL_STATUS_END-->"
-          awk "/$START/{print; print \"\"; system(\"cat ssl_status.md\"); next} /$END/{print; found=1} !found" README.md > NEW_README.md
-          mv NEW_README.md README.md
-
-      - name: Commit and Push README if changed
+      - name: Commit and push if changed
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
 
           if [[ `git status --porcelain` ]]; then
             git add README.md
-            git commit -m "📄 更新 SSL 状态信息"
+            git commit -m "更新 SSL 证书状态"
             git push
           else
-            echo "📄 README 无变化，跳过提交"
+            echo "README 无变化，无需提交"
           fi
 
-      - name: Fail if cert expiring within 30 days
+      - name: Fail if cert expires soon
         if: ${{ steps.ssl.outputs.exit_needed == 'true' }}
         run: |
-          echo "❌ meekdai.com SSL 证书将在 ${{ steps.ssl.outputs.remaining_days }} 天内过期，触发失败"
+          echo "❌ meekdai.com SSL 证书将在 ${{ steps.ssl.outputs.status }} 过期，触发失败"
           exit 1
