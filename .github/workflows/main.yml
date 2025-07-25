@@ -26,7 +26,7 @@ jobs:
           echo "📅 证书过期日期: $EXPIRY_DATE"
           echo "⏳ 证书还有 $REMAINING_DAYS 天到期"
 
-          if [ "$REMAINING_DAYS" -lt 30 ]; then
+          if [ "$REMAINING_DAYS" -lt 90 ]; then
             echo "::error title=证书即将过期::meekdai.com 剩余 ${REMAINING_DAYS} 天，截止 ${EXPIRY_DATE}"
             exit 1
           else
