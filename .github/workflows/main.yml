@@ -8,6 +8,8 @@ on:
 jobs:
   check-ssl-cert:
     runs-on: ubuntu-latest
+    env:
+      DINGTALK_WEBHOOK: ${{ secrets.DINGTALK_WEBHOOK }}
     steps:
       - name: Check SSL Certificate Expiry
         run: |
