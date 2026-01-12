@@ -1,1 +1,1 @@
-⚠️ meekdai.com 证书将在 3 天内过期！
+✅ meekdai.com 证书正常，剩余 89 天
