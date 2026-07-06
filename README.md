@@ -1,1 +1,1 @@
-✅ meekdai.com 证书正常，剩余 64 天
+✅ meekdai.com 证书正常，剩余 63 天
